@@ -1,0 +1,100 @@
+{
+  "numerical_features": [
+    "Duration in month",
+    "Credit amount",
+    "Installment rate in percentage of disposable income",
+    "Age in years",
+    "Number of existing credits at this bank",
+    "Number of people being liable to provide maintenance for"
+  ],
+  "ordinal_features": [
+    "Status of existing checking account",
+    "Credit history",
+    "Savings account/bonds",
+    "Present employment since",
+    "Job"
+  ],
+  "nominal_features": [
+    "Purpose",
+    "Personal status and sex",
+    "Other debtors / guarantors",
+    "Property",
+    "Other installment plans",
+    "Housing",
+    "Telephone",
+    "foreign worker"
+  ],
+  "mappings": {
+    "Status of existing checking account": {
+      "A11": 0,
+      "A12": 1,
+      "A13": 2,
+      "A14": 3
+    },
+    "Credit history": {
+      "A30": 0,
+      "A31": 1,
+      "A32": 2,
+      "A33": 3,
+      "A34": 4
+    },
+    "Savings account/bonds": {
+      "A61": 0,
+      "A62": 1,
+      "A63": 2,
+      "A64": 3,
+      "A65": 4
+    },
+    "Present employment since": {
+      "A71": 0,
+      "A72": 1,
+      "A73": 2,
+      "A74": 3,
+      "A75": 4
+    },
+    "Job": {
+      "A171": 0,
+      "A172": 1,
+      "A173": 2,
+      "A174": 3
+    }
+  },
+  "final_feature_count": 35,
+  "final_features": [
+    "Status of existing checking account",
+    "Duration in month",
+    "Credit history",
+    "Credit amount",
+    "Savings account/bonds",
+    "Present employment since",
+    "Installment rate in percentage of disposable income",
+    "Present residence since",
+    "Age in years",
+    "Number of existing credits at this bank",
+    "Job",
+    "Number of people being liable to provide maintenance for",
+    "Purpose_A41",
+    "Purpose_A410",
+    "Purpose_A42",
+    "Purpose_A43",
+    "Purpose_A44",
+    "Purpose_A45",
+    "Purpose_A46",
+    "Purpose_A48",
+    "Purpose_A49",
+    "Personal status and sex_A92",
+    "Personal status and sex_A93",
+    "Personal status and sex_A94",
+    "Other debtors / guarantors_A102",
+    "Other debtors / guarantors_A103",
+    "Property_A122",
+    "Property_A123",
+    "Property_A124",
+    "Other installment plans_A142",
+    "Other installment plans_A143",
+    "Housing_A152",
+    "Housing_A153",
+    "Telephone_A192",
+    "foreign worker_A202"
+  ]
+}

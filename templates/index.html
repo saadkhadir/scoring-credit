@@ -1,0 +1,1076 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Credit Score ML API - Midnight Vault</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background: #020617;
+            color: #E5E7EB;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: #0F172A;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+            overflow: hidden;
+            border: 1px solid rgba(34, 211, 238, 0.1);
+        }
+
+        .header {
+            background: linear-gradient(135deg, #0F172A 0%, #020617 100%);
+            color: #E5E7EB;
+            padding: 40px 30px;
+            text-align: center;
+            border-bottom: 1px solid rgba(34, 211, 238, 0.2);
+            position: relative;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #22D3EE, transparent);
+            opacity: 0.5;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #22D3EE 0%, #4ADE80 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 0 0 30px rgba(34, 211, 238, 0.3);
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.8;
+            color: #E5E7EB;
+        }
+
+        .status-bar {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 30px;
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(34, 211, 238, 0.05);
+            border-radius: 8px;
+            border: 1px solid rgba(34, 211, 238, 0.1);
+        }
+
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9em;
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background-color: #FBBF24;
+            animation: pulse 2s infinite;
+            box-shadow: 0 0 10px currentColor;
+        }
+
+        .status-dot.healthy {
+            background-color: #4ADE80;
+            box-shadow: 0 0 15px #4ADE80;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.6; transform: scale(0.95); }
+        }
+
+        .content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            padding: 30px;
+        }
+
+        .card {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(34, 211, 238, 0.15);
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            border-color: rgba(34, 211, 238, 0.3);
+            box-shadow: 0 10px 40px rgba(34, 211, 238, 0.1);
+        }
+
+        .card.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .card h2 {
+            color: #22D3EE;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            font-weight: 600;
+            border-bottom: 2px solid rgba(34, 211, 238, 0.3);
+            padding-bottom: 12px;
+            text-shadow: 0 0 20px rgba(34, 211, 238, 0.3);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 8px;
+            color: #E5E7EB;
+            font-size: 0.95em;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px 15px;
+            background: rgba(2, 6, 23, 0.6);
+            border: 1px solid rgba(34, 211, 238, 0.2);
+            border-radius: 8px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9em;
+            color: #E5E7EB;
+            transition: all 0.3s ease;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #22D3EE;
+            box-shadow: 0 0 20px rgba(34, 211, 238, 0.2);
+            background: rgba(2, 6, 23, 0.8);
+        }
+
+        button {
+            background: linear-gradient(135deg, #22D3EE 0%, #1d9db8 100%);
+            color: #020617;
+            padding: 14px 28px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Space Grotesk', sans-serif;
+            box-shadow: 0 4px 15px rgba(34, 211, 238, 0.3);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(34, 211, 238, 0.5);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #64748b 0%, #475569 100%);
+            color: #E5E7EB;
+            box-shadow: 0 4px 15px rgba(100, 116, 139, 0.3);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #4ADE80 0%, #22c55e 100%);
+            color: #020617;
+            box-shadow: 0 4px 15px rgba(74, 222, 128, 0.4);
+        }
+
+        .response {
+            background: rgba(2, 6, 23, 0.6);
+            border-left: 4px solid #22D3EE;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+            display: none;
+            max-height: 500px;
+            overflow-y: auto;
+            box-shadow: 0 0 20px rgba(34, 211, 238, 0.1);
+        }
+
+        .response.show {
+            display: block;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .response.success {
+            border-left-color: #4ADE80;
+            box-shadow: 0 0 20px rgba(74, 222, 128, 0.15);
+        }
+
+        .response.error {
+            border-left-color: #F87171;
+            box-shadow: 0 0 20px rgba(248, 113, 113, 0.15);
+        }
+
+        .response-title {
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #E5E7EB;
+            font-size: 1.2em;
+        }
+
+        .prediction-result {
+            background: rgba(15, 23, 42, 0.8);
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 10px;
+            border: 1px solid rgba(34, 211, 238, 0.2);
+        }
+
+        .prediction-result .risk-badge {
+            display: inline-block;
+            padding: 6px 18px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.9em;
+            font-family: 'JetBrains Mono', monospace;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .risk-badge.LOW {
+            background: rgba(74, 222, 128, 0.2);
+            color: #4ADE80;
+            border: 1px solid #4ADE80;
+            box-shadow: 0 0 15px rgba(74, 222, 128, 0.3);
+        }
+
+        .risk-badge.MEDIUM {
+            background: rgba(251, 191, 36, 0.2);
+            color: #FBBF24;
+            border: 1px solid #FBBF24;
+            box-shadow: 0 0 15px rgba(251, 191, 36, 0.3);
+        }
+
+        .risk-badge.HIGH {
+            background: rgba(248, 113, 113, 0.2);
+            color: #F87171;
+            border: 1px solid #F87171;
+            box-shadow: 0 0 15px rgba(248, 113, 113, 0.3);
+        }
+
+        pre {
+            background: rgba(2, 6, 23, 0.8);
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-size: 0.85em;
+            border: 1px solid rgba(34, 211, 238, 0.1);
+            font-family: 'JetBrains Mono', monospace;
+            color: #22D3EE;
+        }
+
+        .models-list {
+            max-height: 350px;
+            overflow-y: auto;
+            border: 1px solid rgba(34, 211, 238, 0.2);
+            border-radius: 8px;
+            padding: 15px;
+            background: rgba(2, 6, 23, 0.4);
+        }
+
+        .model-item {
+            padding: 18px;
+            background: rgba(15, 23, 42, 0.6);
+            margin-bottom: 12px;
+            border-radius: 8px;
+            border-left: 3px solid #22D3EE;
+            transition: all 0.3s ease;
+        }
+
+        .model-item:hover {
+            background: rgba(15, 23, 42, 0.8);
+            box-shadow: 0 0 15px rgba(34, 211, 238, 0.2);
+        }
+
+        .model-item strong {
+            color: #E5E7EB;
+            font-size: 1.1em;
+        }
+
+        .model-item .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            margin-left: 10px;
+            background: rgba(34, 211, 238, 0.2);
+            color: #22D3EE;
+            border: 1px solid #22D3EE;
+            font-family: 'JetBrains Mono', monospace;
+            animation: badgePulse 3s infinite;
+        }
+
+        @keyframes badgePulse {
+            0%, 100% { box-shadow: 0 0 10px rgba(34, 211, 238, 0.3); }
+            50% { box-shadow: 0 0 20px rgba(34, 211, 238, 0.5); }
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            color: #22D3EE;
+            margin: 20px 0;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .spinner {
+            border: 3px solid rgba(34, 211, 238, 0.2);
+            border-top: 3px solid #22D3EE;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 10px auto;
+            box-shadow: 0 0 20px rgba(34, 211, 238, 0.3);
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .form-grid.three-cols {
+            grid-template-columns: 1fr 1fr 1fr;
+        }
+
+        @media (max-width: 1024px) {
+            .content {
+                grid-template-columns: 1fr;
+            }
+            
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .form-grid.three-cols {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.8em;
+            }
+            
+            .status-bar {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .form-grid.three-cols {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .helper-text {
+            font-size: 0.85em;
+            color: rgba(229, 231, 235, 0.6);
+            margin-top: 5px;
+        }
+
+        .section-divider {
+            border-top: 1px solid rgba(34, 211, 238, 0.15);
+            margin: 25px 0;
+        }
+
+        .score-display {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 2.5em;
+            font-weight: 700;
+        }
+
+        .glow-text {
+            text-shadow: 0 0 20px currentColor;
+        }
+
+        /* Scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(2, 6, 23, 0.6);
+            border-radius: 5px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(34, 211, 238, 0.4);
+            border-radius: 5px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(34, 211, 238, 0.6);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔒 Credit Score ML API</h1>
+            <p>Interface de prédiction de risque crédit avec MLflow - Midnight Vault</p>
+            <div class="status-bar">
+                <div class="status-indicator">
+                    <span class="status-dot" id="statusDot"></span>
+                    <span id="statusText">Vérification...</span>
+                </div>
+                <div class="status-indicator">
+                    <span>📦 Modèle: <strong id="modelVersion">-</strong></span>
+                </div>
+                <div class="status-indicator">
+                    <span>🕒 <span id="currentTime">-</span></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="content">
+            <!-- Section Prédiction Individuelle -->
+            <div class="card">
+                <h2>🔮 Prédiction Individuelle</h2>
+                
+                <div class="form-group">
+                    <label>📊 Informations du crédit</label>
+                    <div class="form-grid">
+                        <div>
+                            <label for="duration">Durée (mois):</label>
+                            <input type="number" id="duration" value="12" min="1" max="120">
+                        </div>
+                        <div>
+                            <label for="amount">Montant crédit:</label>
+                            <input type="number" id="amount" value="5000" min="1">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="form-grid">
+                        <div>
+                            <label for="installment">Taux mensualité (1-4):</label>
+                            <input type="number" id="installment" value="2" min="1" max="4">
+                        </div>
+                        <div>
+                            <label for="age">Âge:</label>
+                            <input type="number" id="age" value="35" min="18" max="100">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="form-grid">
+                        <div>
+                            <label for="credits">Crédits existants:</label>
+                            <input type="number" id="credits" value="1" min="1" max="4">
+                        </div>
+                        <div>
+                            <label for="dependents">Personnes à charge:</label>
+                            <input type="number" id="dependents" value="1" min="1" max="2">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section-divider"></div>
+
+                <div class="form-group">
+                    <label>🏦 Informations bancaires</label>
+                    <div class="form-grid three-cols">
+                        <div>
+                            <label for="checking">Compte chèque:</label>
+                            <select id="checking">
+                                <option value="A11">< 0 DM</option>
+                                <option value="A12" selected>0-200 DM</option>
+                                <option value="A13">> 200 DM</option>
+                                <option value="A14">Aucun</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="savings">Épargne:</label>
+                            <select id="savings">
+                                <option value="A61" selected>< 100 DM</option>
+                                <option value="A62">100-500 DM</option>
+                                <option value="A63">500-1000 DM</option>
+                                <option value="A64">> 1000 DM</option>
+                                <option value="A65">Inconnu</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="history">Historique:</label>
+                            <select id="history">
+                                <option value="A30">Excellent</option>
+                                <option value="A31">Très bon</option>
+                                <option value="A32" selected>Bon</option>
+                                <option value="A33">Retards passés</option>
+                                <option value="A34">Critique</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="form-grid three-cols">
+                        <div>
+                            <label for="employment">Emploi:</label>
+                            <select id="employment">
+                                <option value="A71">Chômeur</option>
+                                <option value="A72">< 1 an</option>
+                                <option value="A73" selected>1-4 ans</option>
+                                <option value="A74">4-7 ans</option>
+                                <option value="A75">> 7 ans</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="job">Poste:</label>
+                            <select id="job">
+                                <option value="A171">Non qualifié</option>
+                                <option value="A172">Résident</option>
+                                <option value="A173" selected>Qualifié</option>
+                                <option value="A174">Cadre</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="purpose">Objet:</label>
+                            <select id="purpose">
+                                <option value="A40">Voiture neuve</option>
+                                <option value="A41">Voiture occasion</option>
+                                <option value="A42">Meuble</option>
+                                <option value="A43" selected>Radio/TV</option>
+                                <option value="A44">Électroménager</option>
+                                <option value="A45">Réparations</option>
+                                <option value="A46">Éducation</option>
+                                <option value="A49">Affaires</option>
+                                <option value="A410">Autres</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section-divider"></div>
+
+                <div class="form-group">
+                    <label>👤 Informations personnelles</label>
+                    <div class="form-grid three-cols">
+                        <div>
+                            <label for="status">Statut:</label>
+                            <select id="status">
+                                <option value="A91">H divorcé/séparé</option>
+                                <option value="A92">F divorcée/séparée</option>
+                                <option value="A93" selected>H célibataire</option>
+                                <option value="A94">H marié/veuf</option>
+                                <option value="A95">F célibataire</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="debtors">Garants:</label>
+                            <select id="debtors">
+                                <option value="A101" selected>Aucun</option>
+                                <option value="A102">Co-emprunteur</option>
+                                <option value="A103">Garant</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="property">Propriété:</label>
+                            <select id="property">
+                                <option value="A121" selected>Immobilier</option>
+                                <option value="A122">Épargne/assurance</option>
+                                <option value="A123">Voiture</option>
+                                <option value="A124">Aucun</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="form-grid three-cols">
+                        <div>
+                            <label for="installments">Plans:</label>
+                            <select id="installments">
+                                <option value="A141">Banque</option>
+                                <option value="A142">Magasin</option>
+                                <option value="A143" selected>Aucun</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="housing">Logement:</label>
+                            <select id="housing">
+                                <option value="A151">Loyer</option>
+                                <option value="A152" selected>Propriétaire</option>
+                                <option value="A153">Gratuit</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="telephone">Téléphone:</label>
+                            <select id="telephone">
+                                <option value="A191">Non</option>
+                                <option value="A192" selected>Oui</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="foreign">Travailleur étranger:</label>
+                    <select id="foreign">
+                        <option value="A201" selected>Oui</option>
+                        <option value="A202">Non</option>
+                    </select>
+                </div>
+
+                <button onclick="predictSingle()" class="btn-success">🎯 Analyser le risque</button>
+                
+                <div class="loading" id="loadingSingle">
+                    <div class="spinner"></div>
+                    <p>Analyse en cours...</p>
+                </div>
+
+                <div id="predictionResponse" class="response"></div>
+            </div>
+
+            <!-- Section Informations Modèles -->
+            <div class="card">
+                <h2>📦 Informations Modèles</h2>
+
+                <div class="form-group">
+                    <button onclick="checkHealth()" style="width: 100%;">🔍 Vérifier l'état du système</button>
+                </div>
+
+                <div id="healthResponse" class="response"></div>
+
+                <div class="section-divider"></div>
+
+                <div class="form-group">
+                    <button onclick="loadModels()" style="width: 100%;">📊 Lister les modèles</button>
+                </div>
+
+                <div id="modelsResponse" class="models-list" style="display: none;"></div>
+
+                <div class="section-divider"></div>
+
+                <div class="form-group">
+                    <label for="modelInfoName">Détails d'un modèle:</label>
+                    <input type="text" id="modelInfoName" value="RDF_score_pipeline" placeholder="Nom du modèle">
+                    <button onclick="getModelInfo()" style="margin-top: 10px; width: 100%;">ℹ️ Afficher les détails</button>
+                </div>
+
+                <div id="modelInfoResponse" class="response"></div>
+            </div>
+
+            <!-- Section Prédiction Batch (pleine largeur) -->
+            <div class="card full-width">
+                <h2>📊 Prédiction en Lot (Batch)</h2>
+                
+                <div class="form-group">
+                    <label for="batchInput">Format JSON (tableau d'objets):</label>
+                    <textarea id="batchInput" rows="10" placeholder='Exemple: voir ci-dessous'></textarea>
+                    <p class="helper-text">
+                        💡 Exemple: Copiez le format ci-dessous et modifiez les valeurs
+                    </p>
+                </div>
+
+                <button onclick="fillBatchExample()" class="btn-secondary">📋 Remplir avec un exemple</button>
+                <button onclick="predictBatch()" class="btn-success" style="margin-left: 10px;">🚀 Lancer les prédictions</button>
+
+                <div class="loading" id="loadingBatch">
+                    <div class="spinner"></div>
+                    <p>Traitement du lot en cours...</p>
+                </div>
+
+                <div id="batchResponse" class="response"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = window.location.origin;
+        let currentModelInfo = null;
+
+        // Initialisation au chargement
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Interface Credit Score ML chargée - Midnight Vault Theme');
+            updateClock();
+            setInterval(updateClock, 1000);
+            checkHealth();
+        });
+
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('currentTime').textContent = now.toLocaleTimeString('fr-FR');
+        }
+
+        async function checkHealth() {
+            try {
+                const response = await fetch(`${API_BASE}/api/health`);
+                const result = await response.json();
+                
+                const statusDot = document.getElementById('statusDot');
+                const statusText = document.getElementById('statusText');
+                const modelVersion = document.getElementById('modelVersion');
+
+                if (result.status === 'healthy') {
+                    statusDot.classList.add('healthy');
+                    statusText.textContent = 'Système opérationnel';
+                    modelVersion.textContent = 'Chargé';
+                } else {
+                    statusDot.classList.remove('healthy');
+                    statusText.textContent = 'Système dégradé';
+                    modelVersion.textContent = 'Non chargé';
+                }
+
+                showResponse('healthResponse', result, true, '✅ État du système');
+            } catch (error) {
+                const statusDot = document.getElementById('statusDot');
+                const statusText = document.getElementById('statusText');
+                statusDot.classList.remove('healthy');
+                statusText.textContent = 'Erreur connexion';
+                showResponse('healthResponse', { error: error.message }, false, '❌ Erreur');
+            }
+        }
+
+        function collectFormData() {
+            return {
+                "Duration in month": parseInt(document.getElementById('duration').value),
+                "Credit amount": parseFloat(document.getElementById('amount').value),
+                "Installment rate in percentage of disposable income": parseInt(document.getElementById('installment').value),
+                "Age in years": parseInt(document.getElementById('age').value),
+                "Number of existing credits at this bank": parseInt(document.getElementById('credits').value),
+                "Number of people being liable to provide maintenance for": parseInt(document.getElementById('dependents').value),
+                "Status of existing checking account": document.getElementById('checking').value,
+                "Credit history": document.getElementById('history').value,
+                "Savings account/bonds": document.getElementById('savings').value,
+                "Present employment since": document.getElementById('employment').value,
+                "Job": document.getElementById('job').value,
+                "Purpose": document.getElementById('purpose').value,
+                "Personal status and sex": document.getElementById('status').value,
+                "Other debtors / guarantors": document.getElementById('debtors').value,
+                "Property": document.getElementById('property').value,
+                "Other installment plans": document.getElementById('installments').value,
+                "Housing": document.getElementById('housing').value,
+                "Telephone": document.getElementById('telephone').value,
+                "foreign worker": document.getElementById('foreign').value
+            };
+        }
+
+        async function predictSingle() {
+            const loadingDiv = document.getElementById('loadingSingle');
+            const responseDiv = document.getElementById('predictionResponse');
+            
+            try {
+                loadingDiv.classList.add('show');
+                responseDiv.classList.remove('show');
+
+                const data = collectFormData();
+                
+                const response = await fetch(`${API_BASE}/api/predict`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+                
+                if (response.ok) {
+                    showPredictionResult(result);
+                } else {
+                    showResponse('predictionResponse', result, false, '❌ Erreur de prédiction');
+                }
+            } catch (error) {
+                showResponse('predictionResponse', { error: error.message }, false, '❌ Erreur');
+            } finally {
+                loadingDiv.classList.remove('show');
+            }
+        }
+
+        function showPredictionResult(result) {
+            const responseDiv = document.getElementById('predictionResponse');
+            responseDiv.classList.add('show', 'success');
+            responseDiv.classList.remove('error');
+
+            const decision = result.prediction === 1 ? 'CRÉDIT ACCEPTÉ' : 'CRÉDIT REFUSÉ';
+            const icon = result.prediction === 1 ? '✅' : '❌';
+            
+            let html = `
+                <div class="response-title">${icon} ${decision}</div>
+                <div class="prediction-result">
+                    <div style="margin-bottom: 15px;">
+                        <strong>Niveau de risque:</strong> 
+                        <span class="risk-badge ${result.risk_level}">${result.risk_level}</span>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                        <div>
+                            <strong>Probabilité bon crédit:</strong>
+                            <div class="score-display glow-text" style="color: #4ADE80;">${(result.probability_good_credit * 100).toFixed(1)}%</div>
+                        </div>
+                        <div>
+                            <strong>Probabilité mauvais crédit:</strong>
+                            <div class="score-display glow-text" style="color: #F87171;">${(result.probability_bad_credit * 100).toFixed(1)}%</div>
+                        </div>
+                    </div>
+                    <div style="border-top: 1px solid rgba(34, 211, 238, 0.2); padding-top: 10px; font-size: 0.9em; color: rgba(229, 231, 235, 0.7);">
+                        <div><strong>Modèle:</strong> Version ${result.model_version}</div>
+                        <div><strong>Timestamp:</strong> ${new Date(result.timestamp).toLocaleString('fr-FR')}</div>
+                    </div>
+                </div>
+            `;
+
+            responseDiv.innerHTML = html;
+        }
+
+        async function loadModels() {
+            try {
+                const response = await fetch(`${API_BASE}/api/models`);
+                const result = await response.json();
+
+                const modelsDiv = document.getElementById('modelsResponse');
+                modelsDiv.style.display = 'block';
+
+                let html = '';
+                if (result.models && result.models.length > 0) {
+                    result.models.forEach(model => {
+                        const versionsInfo = model.versions.map(v => 
+                            `v${v.version} (${v.stage})`
+                        ).join(', ');
+                        
+                        html += `<div class="model-item">
+                            <strong>${model.name}</strong>
+                            <span class="badge">${model.versions.length} version(s)</span>
+                            <br>
+                            <small style="color: rgba(229, 231, 235, 0.6);">${versionsInfo}</small>
+                        </div>`;
+                    });
+                } else {
+                    html = '<p style="color: rgba(229, 231, 235, 0.5); padding: 20px; text-align: center;">Aucun modèle trouvé</p>';
+                }
+
+                modelsDiv.innerHTML = html;
+            } catch (error) {
+                showResponse('modelsResponse', { error: error.message }, false, '❌ Erreur');
+            }
+        }
+
+        async function getModelInfo() {
+            const modelName = document.getElementById('modelInfoName').value;
+            
+            if (!modelName) {
+                alert('Veuillez entrer un nom de modèle');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/api/models/${modelName}/info`);
+                const result = await response.json();
+                
+                if (response.ok) {
+                    showResponse('modelInfoResponse', result, true, `ℹ️ Détails: ${modelName}`);
+                    document.getElementById('modelVersion').textContent = `v${result.version}`;
+                } else {
+                    showResponse('modelInfoResponse', result, false, '❌ Modèle non trouvé');
+                }
+            } catch (error) {
+                showResponse('modelInfoResponse', { error: error.message }, false, '❌ Erreur');
+            }
+        }
+
+        function fillBatchExample() {
+            const example = [
+                collectFormData(),
+                {
+                    "Duration in month": 24,
+                    "Credit amount": 8000.0,
+                    "Installment rate in percentage of disposable income": 3,
+                    "Age in years": 45,
+                    "Number of existing credits at this bank": 2,
+                    "Number of people being liable to provide maintenance for": 2,
+                    "Status of existing checking account": "A13",
+                    "Credit history": "A33",
+                    "Savings account/bonds": "A62",
+                    "Present employment since": "A74",
+                    "Job": "A174",
+                    "Purpose": "A40",
+                    "Personal status and sex": "A94",
+                    "Other debtors / guarantors": "A102",
+                    "Property": "A122",
+                    "Other installment plans": "A141",
+                    "Housing": "A151",
+                    "Telephone": "A191",
+                    "foreign worker": "A202"
+                },
+                {
+                    "Duration in month": 6,
+                    "Credit amount": 2000.0,
+                    "Installment rate in percentage of disposable income": 1,
+                    "Age in years": 28,
+                    "Number of existing credits at this bank": 1,
+                    "Number of people being liable to provide maintenance for": 1,
+                    "Status of existing checking account": "A14",
+                    "Credit history": "A30",
+                    "Savings account/bonds": "A65",
+                    "Present employment since": "A72",
+                    "Job": "A172",
+                    "Purpose": "A45",
+                    "Personal status and sex": "A95",
+                    "Other debtors / guarantors": "A101",
+                    "Property": "A123",
+                    "Other installment plans": "A143",
+                    "Housing": "A153",
+                    "Telephone": "A192",
+                    "foreign worker": "A201"
+                }
+            ];
+
+            document.getElementById('batchInput').value = JSON.stringify(example, null, 2);
+        }
+
+        async function predictBatch() {
+            const loadingDiv = document.getElementById('loadingBatch');
+            const responseDiv = document.getElementById('batchResponse');
+            
+            try {
+                const inputText = document.getElementById('batchInput').value.trim();
+                
+                if (!inputText) {
+                    alert('Veuillez entrer les données en format JSON');
+                    return;
+                }
+
+                const applications = JSON.parse(inputText);
+
+                if (!Array.isArray(applications)) {
+                    alert('Le JSON doit être un tableau d\'objets');
+                    return;
+                }
+
+                loadingDiv.classList.add('show');
+                responseDiv.classList.remove('show');
+
+                const response = await fetch(`${API_BASE}/api/predict-batch`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ applications })
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    showBatchResults(result);
+                } else {
+                    showResponse('batchResponse', result, false, '❌ Erreur batch');
+                }
+            } catch (error) {
+                showResponse('batchResponse', { error: error.message }, false, '❌ Erreur JSON');
+            } finally {
+                loadingDiv.classList.remove('show');
+            }
+        }
+
+        function showBatchResults(result) {
+            const responseDiv = document.getElementById('batchResponse');
+            responseDiv.classList.add('show', 'success');
+            responseDiv.classList.remove('error');
+
+            let html = `<div class="response-title">📊 Résultats du batch</div>
+                <div style="margin-bottom: 15px; padding: 15px; background: rgba(15, 23, 42, 0.8); border-radius: 8px; border: 1px solid rgba(34, 211, 238, 0.2);">
+                    <strong>Total traité:</strong> ${result.total_processed} demandes<br>
+                    <strong>Modèle:</strong> Version ${result.model_version}
+                </div>`;
+
+            if (result.predictions && result.predictions.length > 0) {
+                result.predictions.forEach((pred, index) => {
+                    const decision = pred.prediction === 1 ? 'ACCEPTÉ' : 'REFUSÉ';
+                    const icon = pred.prediction === 1 ? '✅' : '❌';
+                    const borderColor = pred.risk_level === 'LOW' ? '#4ADE80' : pred.risk_level === 'MEDIUM' ? '#FBBF24' : '#F87171';
+                    
+                    html += `<div style="margin-top: 15px; padding: 18px; background: rgba(15, 23, 42, 0.6); border-radius: 8px; border-left: 3px solid ${borderColor};">
+                        <div style="margin-bottom: 10px;">
+                            <strong>Demande ${index + 1}:</strong> ${icon} ${decision}
+                            <span class="risk-badge ${pred.risk_level}" style="margin-left: 10px;">${pred.risk_level}</span>
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 0.9em; font-family: 'JetBrains Mono', monospace;">
+                            <div>✅ Bon crédit: <strong class="glow-text" style="color: #4ADE80;">${(pred.probability_good_credit * 100).toFixed(1)}%</strong></div>
+                            <div>❌ Mauvais crédit: <strong class="glow-text" style="color: #F87171;">${(pred.probability_bad_credit * 100).toFixed(1)}%</strong></div>
+                        </div>
+                    </div>`;
+                });
+            }
+
+            responseDiv.innerHTML = html;
+        }
+
+        function showResponse(elementId, data, isSuccess, title) {
+            const responseDiv = document.getElementById(elementId);
+            responseDiv.classList.add('show');
+            
+            if (isSuccess) {
+                responseDiv.classList.add('success');
+                responseDiv.classList.remove('error');
+            } else {
+                responseDiv.classList.add('error');
+                responseDiv.classList.remove('success');
+            }
+
+            let html = `<div class="response-title">${title}</div>`;
+            html += `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+            
+            responseDiv.innerHTML = html;
+        }
+    </script>
+</body>
+</html>

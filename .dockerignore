@@ -1,0 +1,43 @@
+# Fichiers et dossiers à exclure de l'image Docker
+
+# Fichiers Python
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+*.egg-info/
+dist/
+build/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Git
+.git
+.gitignore
+
+# Documentation
+*.md
+LICENSE
+
+# Tests
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Fichiers de développement
+.env
+.env.local
+*.log
+
+# Autres
+.streamlit/
+node_modules/

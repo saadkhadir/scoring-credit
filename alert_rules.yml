@@ -1,0 +1,123 @@
+groups:
+  - name: credit_api_alerts
+    interval: 30s
+    rules:
+      # ==================== DISPONIBILITÉ ====================
+      - alert: APIDown
+        expr: up{job="credit-score-api"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Credit Score API est DOWN"
+          description: "L'API Credit Score ne répond pas depuis plus d'une minute"
+
+      - alert: PrometheusDown
+        expr: up{job="prometheus"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Prometheus est DOWN"
+          description: "Prometheus n'est pas accessible"
+
+      # ==================== ERREURS ====================
+      - alert: HighErrorRate
+        expr: sum(rate(http_requests_total{status=~"5.."}[5m])) / sum(rate(http_requests_total[5m])) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Taux d'erreur serveur élevé"
+          description: "{{ $value | humanizePercentage }} des requêtes retournent des erreurs 5xx"
+
+      - alert: APIErrorSpike
+        expr: rate(http_requests_total{status=~"5.."}[1m]) > 0.1
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Pic d'erreurs API détecté"
+          description: "Plus de 0.1 erreurs par seconde détectées"
+
+      # ==================== LATENCE ====================
+      - alert: HighLatency
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Latence API élevée"
+          description: "P95 de latence: {{ $value | humanizeDuration }}"
+
+      - alert: CriticalLatency
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 5
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Latence API critique"
+          description: "P95 de latence: {{ $value | humanizeDuration }}"
+
+      # ==================== PRÉDICTIONS ====================
+      - alert: PredictionErrors
+        expr: rate(credit_predictions_total{status="error"}[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Taux d'erreur de prédiction élevé"
+          description: "{{ $value | humanize }} erreurs de prédiction par seconde"
+
+      - alert: LowPredictionVolume
+        expr: rate(credit_predictions_total[5m]) < 0.01
+        for: 10m
+        labels:
+          severity: info
+        annotations:
+          summary: "Volume de prédictions faible"
+          description: "Moins d'une prédiction par minute"
+
+      # ==================== SANTÉ DU SYSTÈME ====================
+      - alert: ModelLoadFailure
+        expr: rate(model_load_attempts_total{status="error"}[5m]) > 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Échec du chargement du modèle"
+          description: "Le modèle ML n'a pas pu être chargé"
+
+      - alert: NoActiveModels
+        expr: active_models_total == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Aucun modèle actif"
+          description: "Aucun modèle ML n'est actuellement chargé en mémoire"
+
+      # ==================== TAUX DE SUCCÈS ====================
+      - alert: LowSuccessRate
+        expr: sum(rate(http_requests_total{status=~"2.."}[5m])) / sum(rate(http_requests_total[5m])) < 0.95
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Taux de succès faible"
+          description: "Seulement {{ $value | humanizePercentage }} des requêtes réussissent"
+
+      # ==================== RATIO BON/MAUVAIS CRÉDIT ====================
+      - alert: AbnormalCreditRatio
+        expr: |
+          abs(
+            rate(credit_predictions_good_total[10m]) - rate(credit_predictions_bad_total[10m])
+          ) / (
+            rate(credit_predictions_good_total[10m]) + rate(credit_predictions_bad_total[10m])
+          ) > 0.8
+        for: 15m
+        labels:
+          severity: info
+        annotations:
+          summary: "Ratio bon/mauvais crédit anormal"
+          description: "Le ratio de prédictions bon/mauvais crédit dévie du normal"
