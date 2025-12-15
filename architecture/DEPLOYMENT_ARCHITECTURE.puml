@@ -1,0 +1,181 @@
+@startuml Credit_Score_Deployment_Architecture
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam defaultTextAlignment center
+skinparam rectangle {
+    BackgroundColor #E8F4F8
+    BorderColor #0369A1
+    FontColor #1E293B
+    BorderThickness 2
+}
+skinparam component {
+    BackgroundColor #F0F9FF
+    BorderColor #0284C7
+    FontColor #1E293B
+    BorderThickness 2
+}
+skinparam database {
+    BackgroundColor #FEF3C7
+    BorderColor #D97706
+    FontColor #1E293B
+    BorderThickness 2
+}
+
+title Credit Score ML - Architecture de Déploiement Docker\n\n
+
+' ==================== HOST MACHINE ====================
+rectangle "🖥️ Host Machine (Windows)" as host_machine {
+    
+    rectangle "🐳 Docker Engine" as docker_engine {
+        
+        ' ==================== DOCKER NETWORK ====================
+        rectangle "🔗 Bridge Network: 'monitoring'" as docker_network
+        
+        ' ==================== CONTAINERS ====================
+        rectangle "📦 Container: credit-score-api" as api_container {
+            component "Image Base:\npython:3.13.2-slim" as api_image_base
+            component "Build Context:\nDockerfile" as dockerfile_build
+            component "Installed Packages:\n- FastAPI\n- Uvicorn\n- scikit-learn\n- pandas\n- prometheus-client\n- MLflow" as api_packages
+            component "Working Directory:\n/app" as api_workdir
+            component "Process:\nuvicorn main.py" as api_process
+            component "⚙️ Port Mapping:\n0.0.0.0:8000→8000" as api_ports
+            component "🏥 HealthCheck:\n/api/health (30s)" as api_health
+        }
+        
+        rectangle "📦 Container: prometheus" as prometheus_container {
+            component "Image:\nprom/prometheus:latest" as prometheus_image
+            component "Config:\nprometheus.yml" as prometheus_config_file
+            component "Config Volume:\n/etc/prometheus/" as prometheus_config_vol
+            component "Data Storage:\n/prometheus" as prometheus_storage
+            component "⚙️ Port Mapping:\n0.0.0.0:9090→9090" as prometheus_ports
+            component "Scrape Interval: 15s\nRetention: 30 days" as prometheus_settings
+        }
+        
+        rectangle "📦 Container: grafana" as grafana_container {
+            component "Image:\ngrafana/grafana:latest" as grafana_image
+            component "Config Volume:\n/etc/grafana/provisioning" as grafana_config_vol
+            component "Data Volume:\n/var/lib/grafana" as grafana_data_vol
+            component "Admin User: admin\nPassword: admin123" as grafana_auth
+            component "⚙️ Port Mapping:\n0.0.0.0:3000→3000" as grafana_ports
+        }
+        
+        ' ==================== VOLUMES ====================
+        rectangle "💾 Docker Volumes & Mounts" as volumes_section {
+            database "Volume: prometheus-data\nType: Named Volume\nMounted in: /prometheus" as prom_volume
+            database "Volume: grafana-data\nType: Named Volume\nMounted in: /var/lib/grafana" as grafana_volume
+            database "Bind Mount: ./mlruns\nHost → /app/mlruns" as mlruns_bind
+            database "Bind Mount: ./mlflow.db\nHost → /app/mlflow.db" as mlflowdb_bind
+            database "Bind Mount: ./prometheus.yml\nHost → /etc/prometheus/" as prometheus_bind
+            database "Bind Mount: ./grafana/provisioning\nHost → /etc/grafana/provisioning" as grafana_bind
+        }
+    }
+    
+    ' ==================== HOST FILE SYSTEM ====================
+    rectangle "📁 Host File System" as host_fs {
+        database "Project Root\n/score-credit-project" as project_root
+        database "📄 Dockerfile\nBuild specification" as dockerfile
+        database "📄 docker-compose.yml\nOrchestration config" as docker_compose_file
+        database "📊 prometheus.yml\nMetrics config" as prom_config
+        database "📂 ./mlruns/\nModel artifacts\nExperiment runs" as mlruns_dir
+        database "📄 ./mlflow.db\nMLflow database" as mlflowdb_file
+        database "📂 ./grafana/provisioning/\nDashboards config" as grafana_config_dir
+        database "📂 ./data/\nestadistical.csv\nTraining dataset" as data_dir
+        database "📂 ./templates/\nindex.html\nFrontend files" as templates_dir
+        database "📄 main.py\nFastAPI application" as main_py
+    }
+    
+    ' ==================== DEPENDENCIES ====================
+    rectangle "⬇️ Dependency Management" as dependencies {
+        component "requirement.txt\n- mlflow\n- scikit-learn==1.8.0\n- pandas==2.3.3\n- joblib==1.5.2\n- prometheus-client\n- prometheus-fastapi-instrumentator" as requirements_file
+    }
+}
+
+' ==================== EXTERNAL PORTS ====================
+rectangle "🌐 Host Network Interface" as host_network {
+    component "localhost:8000\nAPI Endpoint" as api_endpoint
+    component "localhost:9090\nPrometheus UI" as prometheus_endpoint
+    component "localhost:3000\nGrafana Dashboard" as grafana_endpoint
+}
+
+' ==================== CONNECTIONS ====================
+
+' Build and Setup
+dockerfile -.-> dockerfile_build: "Define image"
+requirements_file -.-> api_packages: "Install deps"
+api_image_base -.-> api_packages: "Base image"
+dockerfile_build --> api_container: "Build"
+
+' Bind Mounts
+mlruns_bind --> api_container: "Connect"
+mlflowdb_bind --> api_container: "Connect"
+prometheus_bind --> prometheus_container: "Mount config"
+grafana_bind --> grafana_container: "Mount config"
+
+' Host FS to Volumes
+project_root --> mlruns_dir: "Contains"
+project_root --> mlflowdb_file: "Contains"
+project_root --> docker_compose_file: "Defines services"
+
+' Configuration Files
+prom_config -.-> prometheus_bind: "Provision"
+grafana_config_dir -.-> grafana_bind: "Provision"
+
+' Network Connectivity
+api_container -.-> docker_network: "Join network"
+prometheus_container -.-> docker_network: "Join network"
+grafana_container -.-> docker_network: "Join network"
+
+' Port Mapping to Host
+api_ports --> api_endpoint: "Map port 8000"
+prometheus_ports --> prometheus_endpoint: "Map port 9090"
+grafana_ports --> grafana_endpoint: "Map port 3000"
+
+' Inter-container Communication (via network)
+prometheus_container -.-> api_container: "Scrape /metrics\n(http://credit-score-api:8000)"
+grafana_container -.-> prometheus_container: "Query metrics\n(http://prometheus:9090)"
+
+' Data Flow
+api_container --> mlruns_bind: "Read/Write models"
+api_container --> mlflowdb_bind: "Read/Write metadata"
+prometheus_container --> prom_volume: "Store time-series"
+grafana_container --> grafana_volume: "Store dashboards"
+
+' ==================== LEGEND ====================
+note top of docker_engine
+  **Docker Compose Orchestration**
+  - Services defined in docker-compose.yml
+  - All containers share 'monitoring' bridge network
+  - HealthChecks configured for each service
+  - Automatic restart on failure (default policy)
+end note
+
+note right of api_container
+  **API Container Details**
+  - Base: python:3.13.2-slim (lightweight)
+  - Dependencies: System (gcc, g++) + Python packages
+  - Exposed Port: 8000 (ASGI server)
+  - HealthCheck: HTTP GET /api/health
+  - Environment: MLFLOW_TRACKING_URI=sqlite:///mlflow.db
+end note
+
+note right of volumes_section
+  **Volume Strategy**
+  Named Volumes: For persistent data
+  - prometheus-data: Time-series DB
+  - grafana-data: Dashboards & config
+  
+  Bind Mounts: For development/config
+  - mlruns: Model artifacts sync
+  - mlflow.db: Training metadata
+  - Config files: Auto-reload
+end note
+
+note bottom of host_network
+  **Port Access**
+  All services accessible from host:
+  - API: http://localhost:8000 (docs, health, predict)
+  - Prometheus: http://localhost:9090 (metrics UI)
+  - Grafana: http://localhost:3000 (dashboards)
+end note
+
+@enduml

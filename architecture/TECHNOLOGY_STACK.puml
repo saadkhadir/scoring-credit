@@ -1,0 +1,230 @@
+@startuml Technology_Stack
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam defaultTextAlignment center
+skinparam rectangle {
+    BackgroundColor #E8F4F8
+    BorderColor #0369A1
+    FontColor #1E293B
+    BorderThickness 2
+}
+skinparam component {
+    BackgroundColor #F0F9FF
+    BorderColor #0284C7
+    FontColor #1E293B
+    BorderThickness 2
+}
+
+title Credit Score ML - Technology Stack Architecture\n\n
+
+' ==================== APPLICATION LAYER ====================
+rectangle "🎨 PRESENTATION LAYER" as presentation {
+    component "Browser\n(Client)" as browser {
+    }
+    
+    component "Frontend Assets\nHTML5/CSS3/JavaScript" as frontend_assets {
+    }
+    
+    component "Responsive Design\nSpace Grotesk Font" as responsive_design {
+    }
+}
+
+' ==================== API LAYER ====================
+rectangle "⚙️ API LAYER" as api_layer {
+    component "FastAPI 0.104+\nAsync Web Framework" as fastapi_framework {
+    }
+    
+    component "Uvicorn\n[standard]\nASGI Web Server" as uvicorn_server {
+    }
+    
+    component "Pydantic v2\nData Validation" as pydantic_lib {
+    }
+    
+    component "CORS Middleware\nCross-Origin Support" as cors_middleware {
+    }
+}
+
+' ==================== ML LAYER ====================
+rectangle "🤖 ML LAYER" as ml_layer {
+    component "scikit-learn 1.8.0\nML Framework" as sklearn_framework {
+    }
+    
+    component "Preprocessing\n(CustomPreprocessor)\nOrdinal Mapping\nOne-Hot Encoding\nStandardScaler" as preprocessing_module {
+    }
+    
+    component "RandomForest\nClassifier\n100 trees, depth 10" as rf_classifier {
+    }
+    
+    component "Model Persistence\njoblib 1.5.2\n(model.pkl)" as model_persist {
+    }
+}
+
+' ==================== DATA LAYER ====================
+rectangle "💾 DATA LAYER" as data_layer {
+    component "pandas 2.3.3\nData Manipulation" as pandas_lib {
+    }
+    
+    component "numpy\n(via pandas)\nNumerical Computing" as numpy_lib {
+    }
+    
+    component "CSV Reader\nestadistical.csv\n(Training Data)" as csv_reader {
+    }
+}
+
+' ==================== MODEL REGISTRY ====================
+rectangle "📦 MODEL REGISTRY" as model_registry {
+    component "MLflow\nModel Versioning\nExperiment Tracking" as mlflow_core {
+    }
+    
+    component "SQLite Database\nmlflow.db\nMetadata Store" as mlflow_db {
+    }
+    
+    component "Artifact Storage\n/mlruns/\nModel artifacts" as artifact_storage {
+    }
+}
+
+' ==================== MONITORING LAYER ====================
+rectangle "📊 MONITORING LAYER" as monitoring {
+    component "prometheus-client\n>=0.17.0\nMetrics Library" as prometheus_client_lib {
+    }
+    
+    component "prometheus-fastapi-\ninstrumentator >=6.0.0\nAuto-instrumentation" as prometheus_instrumentator_lib {
+    }
+    
+    component "Prometheus\n(prom/prometheus:latest)\nTime-Series Database" as prometheus_db {
+    }
+    
+    component "Grafana\n(grafana/grafana:latest)\nDashboard Engine" as grafana_engine {
+    }
+}
+
+' ==================== INFRASTRUCTURE LAYER ====================
+rectangle "🐳 INFRASTRUCTURE LAYER" as infrastructure {
+    component "Docker\nContainer Runtime" as docker_runtime {
+    }
+    
+    component "Docker Compose\nOrchestration Tool" as docker_compose_tool {
+    }
+    
+    component "Base Image\npython:3.13.2-slim\n(Lightweight)" as base_image {
+    }
+}
+
+' ==================== RUNTIME ENVIRONMENT ====================
+rectangle "🖥️ RUNTIME ENVIRONMENT" as runtime {
+    component "Python 3.13.2\nRuntime" as python_runtime {
+    }
+    
+    component "System Libraries\ngcc, g++\n(Compilation)" as system_libs {
+    }
+    
+    component "Linux Base\nDebian Slim" as linux_base {
+    }
+}
+
+' ==================== DEPENDENCIES GRAPH ====================
+
+' Browser → Frontend
+browser --> frontend_assets: "Requests"
+browser --> responsive_design: "Displays"
+
+' Frontend → API
+frontend_assets --> fastapi_framework: "HTTP REST"
+
+' API Layer Internal
+fastapi_framework --> uvicorn_server: "Runs on"
+fastapi_framework --> pydantic_lib: "Uses for validation"
+fastapi_framework --> cors_middleware: "Uses middleware"
+
+' API → ML
+fastapi_framework --> ml_layer: "Calls"
+pydantic_lib --> preprocessing_module: "Schemas"
+
+' ML Layer Internal
+preprocessing_module --> sklearn_framework: "Part of"
+sklearn_framework --> rf_classifier: "Contains"
+rf_classifier --> model_persist: "Saved as"
+
+' ML → Data
+ml_layer --> pandas_lib: "Data handling"
+pandas_lib --> numpy_lib: "Built on"
+csv_reader --> pandas_lib: "Input to"
+
+' ML → Registry
+rf_classifier --> mlflow_core: "Registered to"
+preprocessing_module --> mlflow_core: "Logged to"
+mlflow_core --> mlflow_db: "Stores metadata"
+mlflow_core --> artifact_storage: "Stores artifacts"
+
+' API → Monitoring
+fastapi_framework --> prometheus_client_lib: "Records metrics"
+prometheus_client_lib --> prometheus_instrumentator_lib: "Auto-instrumented by"
+prometheus_instrumentator_lib --> prometheus_db: "Exports to"
+
+' Monitoring → Visualization
+prometheus_db --> grafana_engine: "Data source"
+
+' API → Infrastructure
+uvicorn_server --> docker_runtime: "Runs in"
+docker_compose_tool --> docker_runtime: "Orchestrates"
+
+' Infrastructure → Runtime
+base_image --> python_runtime: "Contains"
+docker_runtime --> base_image: "Uses"
+system_libs --> docker_runtime: "Installed in"
+
+' Runtime Environment
+python_runtime --> linux_base: "Runs on"
+system_libs --> linux_base: "Part of"
+
+' ==================== VERSION LEGEND ====================
+note bottom of fastapi_framework
+  **API Framework**
+  FastAPI: Latest (async/await)
+  Uvicorn: Latest with standard extras
+  Pydantic: v2 (integrated in FastAPI)
+end note
+
+note bottom of sklearn_framework
+  **ML Stack Versions**
+  scikit-learn: 1.8.0 (latest)
+  pandas: 2.3.3 (latest)
+  joblib: 1.5.2 (latest)
+end note
+
+note bottom of monitoring
+  **Monitoring Stack**
+  Prometheus: Latest official image
+  Grafana: Latest official image
+  Client libraries: Latest compatible
+end note
+
+note bottom of docker_runtime
+  **Container Stack**
+  Docker: >=20.10
+  Docker Compose: >=1.29
+  Base Image: python:3.13.2-slim
+  (Minimal, ~120MB)
+end note
+
+note right of python_runtime
+  **Runtime Details**
+  - Python 3.13.2 (Latest stable)
+  - Slim variant (no unnecessary packages)
+  - All deps installed via pip
+  - Total image size ~500MB
+end note
+
+' ==================== DEPENDENCY SUMMARY ====================
+rectangle "📋 DEPENDENCY SUMMARY" as summary {
+    component "Core Dependencies\n✓ FastAPI\n✓ Uvicorn\n✓ scikit-learn==1.8.0\n✓ pandas==2.3.3\n✓ joblib==1.5.2\n✓ pydantic" as core_deps {
+    }
+    
+    component "Monitoring Dependencies\n✓ prometheus-client>=0.17.0\n✓ prometheus-fastapi-instrumentator>=6.0.0\n✓ mlflow (latest)\n✓ requests" as monitoring_deps {
+    }
+    
+    component "Development Tools\n✓ Docker\n✓ Docker Compose\n✓ Git\n✓ pip (package manager)" as dev_tools {
+    }
+}
+
+@enduml
