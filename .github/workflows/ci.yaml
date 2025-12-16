@@ -1,25 +1,44 @@
-name: ci
+name: CI/CD Pipeline
 
 on:
   push:
+    branches: [ main ]
 
 jobs:
-  docker:
-    runs-on: warp-ubuntu-latest-x64-2x
+  build-and-push:
+    runs-on: ubuntu-latest
+
     steps:
-      -
-        name: Login to Docker Hub
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Login Docker Hub
+      - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
-          username: ${{ vars.DOCKERHUB_USERNAME }}
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-      -
-        name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-      -
-        name: Build and push
-        uses: Warpbuilds/build-push-action@v6
-        with:
-          push: true
-          tags: user/app:latest
-          profile-name: super-fast-builder
+
+      # Build & Push housing-api
+      - name: Build and Push score-api image
+        run: |
+          IMAGE_TAG=${GITHUB_SHA}
+          DOCKER_REPO=${{ secrets.DOCKERHUB_USERNAME }}/score-api
+
+          docker build -t $DOCKER_REPO:$IMAGE_TAG -f Dockerfile .
+          docker push $DOCKER_REPO:$IMAGE_TAG
+
+          docker tag $DOCKER_REPO:$IMAGE_TAG $DOCKER_REPO:latest
+          docker push $DOCKER_REPO:latest
+
+      # Build & Push housing-streamlit
+      - name: Build and Push housing-streamlit image
+        run: |
+          IMAGE_TAG=${GITHUB_SHA}
+          DOCKER_REPO=${{ secrets.DOCKERHUB_USERNAME }}/score-streamlit
+
+          docker build -t $DOCKER_REPO:$IMAGE_TAG -f Dockerfile.streamlit .
+          docker push $DOCKER_REPO:$IMAGE_TAG
+
+          docker tag $DOCKER_REPO:$IMAGE_TAG $DOCKER_REPO:latest
+          docker push $DOCKER_REPO:latest
