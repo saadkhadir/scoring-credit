@@ -20,24 +20,12 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       # Build & Push housing-api
-      - name: Build and Push score-api image
+      - name: Build and Push score-credit-api image
         run: |
           IMAGE_TAG=${GITHUB_SHA}
-          DOCKER_REPO=${{ secrets.DOCKERHUB_USERNAME }}/score-api
+          DOCKER_REPO=${{ secrets.DOCKERHUB_USERNAME }}/score-credit-api
 
           docker build -t $DOCKER_REPO:$IMAGE_TAG -f Dockerfile .
-          docker push $DOCKER_REPO:$IMAGE_TAG
-
-          docker tag $DOCKER_REPO:$IMAGE_TAG $DOCKER_REPO:latest
-          docker push $DOCKER_REPO:latest
-
-      # Build & Push housing-streamlit
-      - name: Build and Push housing-streamlit image
-        run: |
-          IMAGE_TAG=${GITHUB_SHA}
-          DOCKER_REPO=${{ secrets.DOCKERHUB_USERNAME }}/score-streamlit
-
-          docker build -t $DOCKER_REPO:$IMAGE_TAG -f Dockerfile.streamlit .
           docker push $DOCKER_REPO:$IMAGE_TAG
 
           docker tag $DOCKER_REPO:$IMAGE_TAG $DOCKER_REPO:latest
