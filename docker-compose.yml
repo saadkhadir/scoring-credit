@@ -3,7 +3,7 @@ version: '3.8'
 services:
   # ==================== API CREDIT SCORE ====================
   api:
-    build: .
+    image: saad909/score-credit-api:latest
     container_name: credit-score-api
     ports:
       - "8000:8000"
