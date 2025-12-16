@@ -20,7 +20,7 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       # Build & Push housing-api
-      - name: Build and Push score-credit-api image
+      - name: Build and Push scoring-credit-api image
         run: |
           IMAGE_TAG=${GITHUB_SHA}
           DOCKER_REPO=${{ secrets.DOCKERHUB_USERNAME }}/score-credit-api
