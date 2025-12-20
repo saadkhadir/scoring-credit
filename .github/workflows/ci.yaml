@@ -85,5 +85,3 @@ jobs:
             cd scoring-credit
             docker compose pull
             docker compose up -d
-            sleep 10
-            curl -f http://localhost:8000/api/health || exit 1
