@@ -41,3 +41,4 @@ htmlcov/
 # Autres
 .streamlit/
 node_modules/
+rapport/

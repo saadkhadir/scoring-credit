@@ -1,0 +1,49 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Login Docker Hub
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      # Build & Push housing-api
+      - name: Build and Push scoring-credit-api image
+        run: |
+          IMAGE_TAG=${GITHUB_SHA}
+          DOCKER_REPO=${{ secrets.DOCKERHUB_USERNAME }}/score-credit-api
+
+          docker build -t $DOCKER_REPO:$IMAGE_TAG -f Dockerfile .
+          docker push $DOCKER_REPO:$IMAGE_TAG
+
+          docker tag $DOCKER_REPO:$IMAGE_TAG $DOCKER_REPO:latest
+          docker push $DOCKER_REPO:latest
+  deploy-on-gcp-vm:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to GCP VM via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: 34.79.170.212
+          username: ${{ secrets.VM_USERNAME }}
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            if [ ! -d "scoring-credit" ]; then
+              git clone https://github.com/saadkhadir/scoring-credit.git
+            fi
+            cd scoring-credit
+            sudo docker compose pull
+            sudo docker compose up -d

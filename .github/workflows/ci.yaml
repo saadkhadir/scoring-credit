@@ -30,54 +30,16 @@ jobs:
 
           docker tag $DOCKER_REPO:$IMAGE_TAG $DOCKER_REPO:latest
           docker push $DOCKER_REPO:latest
-  cd:
+  deploy-on-gcp-vm:
     needs: build-and-push
     runs-on: ubuntu-latest
     steps:
       - name: Deploy to GCP VM via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: 35.205.135.9
-          username: wmouf 
-          key: |
-            -----BEGIN OPENSSH PRIVATE KEY-----
-            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
-            1qbTN7yaAFpAAtAAAABXdtb3VmAQIDBAU=
-            -----END OPENSSH PRIVATE KEY-----
+          host: 34.79.170.212
+          username: ${{ secrets.VM_USERNAME }}
+          key: ${{ secrets.SSH_KEY }}
           script: |
             if [ ! -d "scoring-credit" ]; then
               git clone https://github.com/saadkhadir/scoring-credit.git
