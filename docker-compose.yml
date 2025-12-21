@@ -83,7 +83,24 @@ services:
       - api
       - grafana
       - prometheus
-
+  mlflow:
+    image: ghcr.io/mlflow/mlflow:latest
+    container_name: mlflow
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./mlruns:/mlruns
+      - ./mlflow.db:/mlflow/mlflow.db
+    command: >
+      mlflow server
+      --host 0.0.0.0
+      --port 5000
+      --backend-store-uri sqlite:///mlflow.db
+      --default-artifact-root /mlruns
+    networks:
+      - monitoring
+    depends_on:
+      - api
 volumes:
   prometheus-data:
   grafana-data:
