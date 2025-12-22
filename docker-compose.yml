@@ -1,7 +1,6 @@
 version: '3.8'
 
 services:
-  # ==================== API CREDIT SCORE ====================
   api:
     image: saad909/score-credit-api:latest
     container_name: credit-score-api
@@ -23,7 +22,6 @@ services:
     depends_on:
       - prometheus
 
-  # ==================== PROMETHEUS ====================
   prometheus:
     image: prom/prometheus:latest
     container_name: prometheus
@@ -45,7 +43,6 @@ services:
       retries: 3
       start_period: 10s
 
-  # ==================== GRAFANA ====================
   grafana:
     image: grafana/grafana:latest
     container_name: grafana
@@ -69,6 +66,7 @@ services:
       timeout: 10s
       retries: 3
       start_period: 10s
+      
   nginx:
     image: nginx:alpine
     container_name: nginx-container
